@@ -42,7 +42,7 @@ var AUTOPREFIXER_BROWSERS = [
 
 // Lint JavaScript
 gulp.task('jshint', function () {
-  return gulp.src('app/scripts/**/*.js')
+  return gulp.src(['app/scripts/**/*.js', '!app/assets/bootstrap/js/*.js'])
     .pipe(reload({stream: true, once: true}))
     .pipe($.jshint())
     .pipe($.jshint.reporter('jshint-stylish'))
@@ -77,30 +77,16 @@ gulp.task('fonts', function () {
 
 // Automatically Prefix CSS
 gulp.task('styles:css', function () {
-  return gulp.src('app/styles/**/*.css')
+  return gulp.src(['app/styles/**/*.css', 'app/assets/bootstrap/css/bootstrap.min.css'])
     .pipe($.changed('app/styles'))
     .pipe($.autoprefixer(AUTOPREFIXER_BROWSERS))
     .pipe(gulp.dest('app/styles'))
     .pipe($.size({title: 'styles:css'}));
 });
 
-// Compile Sass For Style Guide Components (app/styles/components)
-gulp.task('styles:components', function () {
-  return gulp.src('app/styles/components/components.scss')
-    .pipe($.rubySass({
-      style: 'expanded',
-      precision: 10,
-      loadPath: ['app/styles/components']
-    }))
-    .on('error', console.error.bind(console))
-    .pipe($.autoprefixer(AUTOPREFIXER_BROWSERS))
-    .pipe(gulp.dest('app/styles/components'))
-    .pipe($.size({title: 'styles:components'}));
-});
-
 // Compile Any Other Sass Files You Added (app/styles)
 gulp.task('styles:scss', function () {
-  return gulp.src(['app/styles/**/*.scss', '!app/styles/components/components.scss'])
+  return gulp.src(['app/styles/**/*.scss'])
     .pipe($.rubySass({
       style: 'expanded',
       precision: 10,
@@ -113,7 +99,7 @@ gulp.task('styles:scss', function () {
 });
 
 // Output Final CSS Styles
-gulp.task('styles', ['styles:components', 'styles:scss', 'styles:css']);
+gulp.task('styles', ['styles:scss', 'styles:css']);
 
 // Scan Your HTML For Assets & Optimize Them
 gulp.task('html', function () {
@@ -126,8 +112,7 @@ gulp.task('html', function () {
     // the next line to only include styles your project uses.
     .pipe($.if('*.css', $.uncss({
       html: [
-        'app/index.html',
-        'app/styleguide/index.html'
+        'app/index.html'
       ],
       // CSS Selectors for UnCSS to ignore
       ignore: [
@@ -140,7 +125,7 @@ gulp.task('html', function () {
     .pipe($.useref.restore())
     .pipe($.useref())
     // Update Production Style Guide Paths
-    .pipe($.replace('components/components.css', 'components/main.min.css'))
+    // .pipe($.replace('components/components.css', 'components/main.min.css'))
     // Minify Any HTML
     .pipe($.if('*.html', $.minifyHtml()))
     // Output Files
@@ -161,7 +146,7 @@ gulp.task('serve', function () {
   });
 
   gulp.watch(['app/**/*.html'], reload);
-  gulp.watch(['app/styles/**/*.scss'], ['styles:components', 'styles:scss']);
+  gulp.watch(['app/styles/**/*.scss'], ['styles:scss']);
   gulp.watch(['{.tmp,app}/styles/**/*.css'], ['styles:css', reload]);
   gulp.watch(['app/scripts/**/*.js'], ['jshint']);
   gulp.watch(['app/images/**/*'], reload);
